@@ -65,7 +65,21 @@ if (HAS_GOOGLE) {
 if (HAS_GOOGLE) {
   router.get(
     "/google/callback",
-    passport.authenticate("google", { session: false, failureRedirect: FRONTEND_URL + "/login?error=google_auth_failed" }),
+    (req, res, next) => {
+      passport.authenticate("google", { session: false }, (err, user, info) => {
+        if (err) {
+          console.error("[Google OAuth] Error:", err);
+          return res.redirect(FRONTEND_URL + "/login?error=google_auth_error");
+        }
+        if (!user) {
+          console.error("[Google OAuth] No user returned:", info);
+          return res.redirect(FRONTEND_URL + "/login?error=google_auth_failed");
+        }
+        // Attach user to request
+        req.user = user;
+        next();
+      })(req, res, next);
+    },
     async (req, res) => {
       // req.user provided by passport strategy
       if (!req.user) {
@@ -75,8 +89,10 @@ if (HAS_GOOGLE) {
         const token = signUserToken({ _id: req.user.id, email: req.user.email || req.user.emails?.[0]?.value });
         const url = new URL(FRONTEND_URL + "/auth/google/callback");
         url.searchParams.set("token", token);
+        console.log("[Google OAuth] Success! Redirecting with token");
         return res.redirect(url.toString());
       } catch (e) {
+        console.error("[Google OAuth] Token generation error:", e);
         return res.redirect(FRONTEND_URL + "/login?error=token_issue_failed");
       }
     }
