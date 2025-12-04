@@ -15,8 +15,8 @@
   "author": "Work Sphere Team",
   "license": "ISC",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": "22.x",
+    "npm": ">=10.0.0"
   },
   "dependencies": {
     "aws-sdk": "^2.1692.0",
